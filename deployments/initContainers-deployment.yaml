@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: ic-xfusion
+  name: ic-deploy-xfusion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ic-xfusion
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ic-xfusion
+    spec:
+      containers:
+      - image: debian:latest
+        name: ic-main-xfusion
+        volumeMounts:
+        - name: ic-volume-xfusion
+          mountPath: /ic
+        command: ['/bin/bash', '-c', 'while true; do cat /ic/blog; sleep 5; done']
+
+      initContainers:
+      - image: debian:latest
+        name: ic-msg-xfusion
+        volumeMounts:
+        - name: ic-volume-xfusion
+          mountPath: /ic
+        command: ['/bin/bash', '-c', 'echo Init Done - Welcome to xFusionCorp Industries > /ic/blog']
+
+
+      volumes:
+      - name: ic-volume-xfusion
+        emptyDir: {}
+
+status: {}

@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: iron-gallery-deployment-nautilus
+    run: iron-gallery
+  name: iron-gallery-deployment-nautilus
+  namespace: iron-namespace-nautilus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iron-gallery-deployment-nautilus
+      run: iron-gallery
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: iron-gallery-deployment-nautilus
+        run: iron-gallery
+    spec:
+      containers:
+      - image: kodekloud/irongallery:2.0
+        name: iron-gallery-container-nautilus
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html/data
+          name: config
+        - mountPath: /usr/share/nginx/html/uploads
+          name: images
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: images
+        emptyDir: {}
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: iron-db-deployment-nautilus
+    db: mariadb
+  name: iron-db-deployment-nautilus
+  namespace: iron-namespace-nautilus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iron-db-deployment-nautilus
+      db: mariadb
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: iron-db-deployment-nautilus
+        db: mariadb
+    spec:
+      containers:
+      - image: kodekloud/irondb:2.0
+        name: iron-db-container-nautilus
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: db
+        env:
+        - name: MYSQL_DATABASE
+          value: "database_web"
+        - name: MYSQL_ROOT_PASSWORD
+          value: "LfvtO055(B:O"
+        - name: MYSQL_PASSWORD
+          value: "l41SS0gILxg"
+        - name: MYSQL_USER
+          value: "db_user"
+      volumes:
+      - name: db
+        emptyDir: {}
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iron-gallery-service-nautilus
+  namespace: iron-namespace-nautilus
+spec:
+  type: NodePort
+  selector:
+    run: iron-gallery
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 32678
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iron-db-service-nautilus
+  namespace: iron-namespace-nautilus
+spec:
+  selector:
+    db: mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP

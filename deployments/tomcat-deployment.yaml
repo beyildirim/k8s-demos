@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: tomcat-deployment-datacenter
+  name: tomcat-deployment-datacenter
+  namespace: tomcat-namespace-datacenter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tomcat-deployment-datacenter
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: tomcat-deployment-datacenter
+    spec:
+      containers:
+      - image: gcr.io/kodekloud/centos-ssh-enabled:tomcat
+        name: tomcat-container-datacenter
+        resources: {}
+        ports:
+        - containerPort: 8080
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-service-datacenter
+  namespace: tomcat-namespace-datacenter
+spec:
+  type: NodePort
+  selector:
+    app: tomcat-deployment-datacenter
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32227

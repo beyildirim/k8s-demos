@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: lamp-wp
+  name: lamp-wp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lamp-wp
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lamp-wp
+    spec:
+      containers:
+      - image: webdevops/php-apache:alpine-3-php7
+        name: httpd-php-container
+        resources: {}
+        volumeMounts:
+        - name: php-config-volume
+          mountPath: /opt/docker/etc/php/php.ini
+          subPath: php.ini
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_PASSWORD
+        - name: MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_HOST
+        ports:
+        - containerPort: 80                                                  
+      - image: mysql:5.6
+        name: mysql-container
+        resources: {}
+        volumeMounts:
+        - name: mysql-initdb
+          mountPath: /docker-entrypoint-initdb.d
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_DATABASE
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_PASSWORD
+        - name: MYSQL_HOST
+          valueFrom:
+            secretKeyRef:
+              name: lamp-secret
+              key: MYSQL_HOST
+        ports:
+        - containerPort: 3306
+      volumes:
+      - name: php-config-volume
+        configMap:
+          name: php-config
+      - name: mysql-initdb
+        configMap:
+          name: mysql-initdb-config
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lamp-service
+spec:
+  type: NodePort
+  selector:
+    app: lamp-wp
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30008
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: lamp-wp
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: php-config
+data:
+  php.ini: |
+    variables_order: "EGPCS"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lamp-secret
+type: Opaque
+data:
+  MYSQL_ROOT_PASSWORD: ZGJwYXNzd29yZA==
+  MYSQL_DATABASE: bWFpbmRi
+  MYSQL_USER: dXNlcg==
+  MYSQL_PASSWORD: dXNlcnBhc3N3b3Jk
+  MYSQL_HOST: MTI3LjAuMC4x
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+data:
+  init-db.sql: |
+    CREATE DATABASE IF NOT EXISTS maindb;
+    CREATE USER 'user'@'localhost' IDENTIFIED BY 'userpassword';
+    GRANT ALL PRIVILEGES ON maindb.* TO 'user'@'%';
+    FLUSH PRIVILEGES;

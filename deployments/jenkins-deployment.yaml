@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: jenkins
+  name: jenkins-deployment
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-deployment
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: jenkins-deployment
+    spec:
+      containers:
+      - image: jenkins/jenkins
+        name: jenkins-container
+        resources: {}
+        ports:
+        - containerPort: 8080
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-service
+  namespace: jenkins
+spec:
+  type: NodePort
+  selector:
+    app: jenkins-deployment
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30008
